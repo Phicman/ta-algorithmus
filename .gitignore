@@ -1,0 +1,14 @@
+# Windows Zone.Identifier (WSL)
+*:Zone.Identifier
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+.env
+
+# IDE
+.vscode/
+.idea/
