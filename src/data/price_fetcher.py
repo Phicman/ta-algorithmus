@@ -31,6 +31,9 @@ def _is_up_to_date(df: pd.DataFrame) -> bool:
 
 def _fetch_from_yfinance(ticker: str, start: str, end: str) -> pd.DataFrame:
     df = yf.download(ticker, start=start, end=end, interval="1d", auto_adjust=True, progress=False)
+    # yfinance 1.x gibt MultiIndex-Spalten zurück → auf einfache Spaltennamen reduzieren
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.get_level_values(0)
     df.index.name = "Date"
     return df
 
