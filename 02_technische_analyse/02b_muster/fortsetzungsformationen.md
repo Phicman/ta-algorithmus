@@ -93,6 +93,39 @@ Spiegelverkehrt zum aufsteigenden Dreieck.
 
 ---
 
+## Price Channel (Outside Price Channel / Trading Range Breakout)
+
+> Quelle: Park & Irwin (2004) — eines der meistgetesteten systematischen Handelssysteme in der akademischen Literatur
+
+**Grundprinzip:** Der Kurs bricht über das höchste Hoch der letzten n Tage (Kaufsignal) oder unter das tiefste Tief der letzten n Tage (Verkaufssignal). Eine neue Bewegung zu einem neuen Hoch oder Tief impliziert eine Fortsetzung in diese Richtung.
+
+**Konstruktion:**
+
+| Begriff | Definition |
+|---------|------------|
+| **Highest High (HH)** | Höchstes Hoch der letzten n Tage (exkl. heutiger Kerze) |
+| **Lowest Low (LL)** | Tiefstes Tief der letzten n Tage (exkl. heutiger Kerze) |
+| **n** | Kanalbreite in Tagen (typisch: 20, 50 oder 200 Tage) |
+
+**Handelsregeln:**
+
+| Signal | Bedingung |
+|--------|-----------|
+| **BUY** | Schlusskurs heute > Highest High der letzten n Tage |
+| **SELL** | Schlusskurs heute < Lowest Low der letzten n Tage |
+
+**Unterschied zur Rechteck-Formation:**
+- Rechteck = visuelles Chartmuster (subjektiv identifiziert)
+- Price Channel = systematische, parametrisierbare Regel (objektiv berechenbar, direkt im Code umsetzbar)
+
+**Verwendung im Algorithmus:**
+- Als eigenständiges Ausbruchs-Signal (Trendfolge)
+- Als Bestätigung für andere Formationsausbrüche
+- Kanallänge n als optimierbarer Parameter im Backtest
+- Kombination mit Volumenbestätigung erhöht Signalqualität deutlich
+
+---
+
 ## Broadening Top / Umgekehrtes Dreieck (Bearish)
 
 - Divergierende Trendlinien (Gegenteil des symmetrischen Dreiecks)

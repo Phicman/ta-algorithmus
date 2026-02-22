@@ -35,6 +35,7 @@ DANN Signal = BUY / SELL / WATCH
 - Aufwärtstrend: Höhere Hochs UND höhere Tiefs
 - Abwärtstrend: Niedrigere Hochs UND niedrigere Tiefs
 - **Wochen-MACD als übergeordneter Trendfilter:** Tagessignale nur in Richtung des Wochen-MACD
+- **MACD = Bestätigungsinstrument, kein Timing-Indikator:** RSI und Bollinger Bands liefern Signale schneller; MACD bestätigt nachgelagert (Pramudya/Ichsani 2020)
 
 ### 2. ADX-Regime-Filter
 | ADX | Aktion |
@@ -61,6 +62,7 @@ DANN Signal = BUY / SELL / WATCH
 
 ### 6. Kombinations-Signal (verstärkt Signal)
 - RSI + Stochastik beide in Extremzone → höhere Signalqualität
+- RSI + Bollinger Bands beide in Extremzone → besonders zuverlässige Verkaufssignale
 - Muster + Fibonacci-Level koinzidieren → höhere Wahrscheinlichkeit
 
 ---
@@ -158,3 +160,14 @@ Dies bestätigt zwei Designentscheidungen des Algorithmus:
 2. **ADX als Pflicht-Filter für RSI** ist empirisch notwendig: RSI in Trendmärkten ohne ADX-Filter führt zu gemischten Ergebnissen; mit Regime-Filter (ADX < 25 für Oszillator-Signale) verbessern sich die Resultate strukturell
 
 Zudem gilt: Die Qualität von MA-Signalen verbessert sich, je länger der Beobachtungszeitraum nach dem Signal ist. Das stärkt die Ausrichtung auf **positionsorientiertes Trading** (Tage bis Wochen) gegenüber sehr kurzfristigen Signalen.
+
+---
+
+## Ergänzende Evidenz: Indikator-Timing *(Pramudya/Ichsani 2020)*
+
+> Quelle: *Efficiency of Technical Analysis for the Stock Trading* – Vergleich von RSI, MACD und Bollinger Bands auf dem indonesischen LQ45-Index
+
+- **Verkaufssignale:** Bollinger Bands und RSI erfassen Verkaufssignale früher und zuverlässiger als MACD
+- **Kaufsignale:** RSI reagiert am schnellsten; MACD zu langsam für präzises Timing
+- **MACD-Schwäche:** Signale kommen oft zu spät für handlungsrelevante Entscheidungen
+- **Konsequenz:** MACD nie als alleinigen Signal-Trigger verwenden; immer nur als Trendbestätigung

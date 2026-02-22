@@ -1,0 +1,8 @@
+# Technologie
+AAPL
+MSFT
+NVDA
+
+# Finanzen
+JPM
+BAC

@@ -1,8 +1,8 @@
 # Handelsalgorithmus – Projekt-Dokumentation
 
 > Zentrale Dokumentation zum Aufbau eines modularen, signalbasierten Handelsalgorithmus.
-> Projektphase: Konzeption
-> Letzte Aktualisierung: 2026-02-21
+> Projektphase: Konzeption + Data-Modul implementiert
+> Letzte Aktualisierung: 2026-02-22
 
 ---
 
@@ -56,8 +56,25 @@ Aktiendaten
 | Sentiment-Analyse | [04_sentiment_analyse/README.md](./04_sentiment_analyse/README.md) | 🔲 Konzept |
 | Market Regime | [05_market_regime/README.md](./05_market_regime/README.md) | 🔲 Konzept |
 | Geldmanagement | [06_geldmanagement.md](./06_geldmanagement.md) | 🔲 Konzept |
-| Architektur | [07_architektur.md](./07_architektur.md) | 🔲 Konzept |
+| Architektur | [07_architektur.md](./07_architektur.md) | ✅ Dokumentiert |
 | TODO / Backlog | [08_todo.md](./08_todo.md) | ✅ Aktiv |
+
+---
+
+## Implementierungsstand
+
+| Datei | Beschreibung | Status |
+|-------|-------------|--------|
+| `src/data/price_fetcher.py` | yfinance → OHLCV CSV, Multi-Ticker, Caching | ✅ Fertig |
+| `src/data/news_fetcher.py` | Alpha Vantage News API (benötigt `.env` mit API-Key) | ✅ Fertig |
+| `tickers.txt` | AAPL, MSFT, NVDA, JPM, BAC | ✅ Fertig |
+| `requirements.txt` | yfinance, pandas, requests, python-dotenv | ✅ Fertig |
+
+**Schlüssel-Entscheidungen:**
+- Datenspeicherung: CSV je Ticker (`{TICKER}_daily.csv`) + kombinierte `all_daily.csv`
+- Ticker-Verwaltung: `tickers.txt` (Kommentare mit `#`, Leerzeilen werden ignoriert)
+- Unternehmensname: Spalte `Name` zwischen Ticker und Open (via `yfinance.info`)
+- Daily OHLCV ab `2019-01-01` als Standard-Startdatum
 
 ---
 
@@ -85,3 +102,6 @@ Wie die einzelnen Modul-Scores zu einem Gesamt-Score zusammengeführt werden (z.
 | # | Quelle | Typ | Verwendet in |
 |---|--------|-----|--------------|
 | 1 | John J. Murphy – *Technische Analyse der Finanzmärkte* | Buch | Technische Analyse |
+| 2 | Park & Irwin (2004) | Paper | Price Channel / Fortsetzungsformationen |
+| 3 | Pramudya & Ichsani (2020) | Paper | Signal-Logik (MACD als Bestätigung, RSI+BB-Kombination) |
+| 4 | Tsinaslanidis & Guijarro (2021) | Paper | ML-Modul: DTW Generic Pattern Recognition |

@@ -1,6 +1,9 @@
 # Windows Zone.Identifier (WSL)
 *:Zone.Identifier
 
+# Umgebungsvariablen
+.env
+
 # Python
 __pycache__/
 *.py[cod]

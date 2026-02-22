@@ -7,32 +7,86 @@
 ## Systemübersicht
 
 ```
-[Ticker-Liste]
-     ↓
-[OHLCV-Daten laden]          (API / yfinance)
-     ↓
-[Langfrist-Kontext]          (Wochen-/Monatschart-Trend)
-     ↓
-[ADX Regime-Filter]          (Trend vs. Range erkennen)
-     ↓
-[Indikator-Berechnung]       (RSI, MACD, Bollinger, MA, Volumen, OBV)
-     ↓
-[Muster-Scanner]             (je Muster eine Funktion)
-     ↓
-[Signal-Filter]              (Trendrichtung, Volumen, CRV, Timeframe)
-     ↓
-[Output-Liste]               (Ticker, Muster, Signal, Stärke, Datum, Kursziel, Stop)
+                    [Ticker-Liste]
+                          │
+                   [Data Fetcher]
+                  /               \
+           [yfinance]        [Alpha Vantage]
+          (OHLCV CSV)          (News CSV)
+                  \               /
+                   ───────────────
+                          │
+          ┌───────────────┼───────────────┐
+          │               │               │
+    [TA-Analyse]   [Market Regime]    [ML-Analyse]   [Sentiment-Analyse]
+    Indikatoren    Volatilität &      XGBoost        FinBERT
+    Muster         Return-Umfeld      Signale        News-Scoring
+    Signal-Logik
+          │               │               │               │
+          └───────────────┴───────────────┴───────────────┘
+                                  │
+                          [Signal-Logik]
+                          Filterung & CRV
+                                  │
+                        [Geldmanagement]
+                        Positionsgröße & Stop
+                                  │
+                             [Output]
+                     Ticker, Signal, Stärke, CRV
+```
+
+---
+
+## Technologie-Stack
+
+| Komponente         | Technologie                        |
+|--------------------|------------------------------------|
+| Sprache            | Python                             |
+| Datenabruf Kurse   | yfinance                           |
+| Datenabruf News    | Alpha Vantage REST API             |
+| Datenspeicherung   | CSV (später ggf. SQLite)           |
+| Indikator-Berechnung | pandas, pandas-ta / ta-lib       |
+| Muster-Erkennung   | Eigene Python-Funktionen           |
+| ML-Signalgenerierung | XGBoost                          |
+| Generic Pattern Recognition | DTW / UCR Suite (tslearn / rucrdtw) |
+| Sentiment-Analyse  | FinBERT (HuggingFace Transformer)  |
+| Visualisierung     | matplotlib / plotly                |
+| Output             | CSV / JSON / Dashboard             |
+
+---
+
+## Projektstruktur
+
+```
+ta-algorithmus/
+├── src/
+│   ├── data/
+│   │   ├── price_fetcher.py     # yfinance → OHLCV CSV
+│   │   └── news_fetcher.py      # Alpha Vantage → News CSV
+│   ├── ta/
+│   │   ├── indikatoren/         # SMA, EMA, RSI, MACD, Bollinger, OBV, ADX...
+│   │   ├── muster/              # Candlesticks, Formationen, Umkehr/Fortsetzung
+│   │   └── signal_logik.py      # Filterung, CRV-Berechnung, Signal-Output
+│   ├── ml/                      # XGBoost + DTW Generic Pattern Recognition
+│   ├── sentiment/               # FinBERT Pipeline & Scoring
+│   ├── market_regime/           # Regime-Erkennung (Trend/Range/Volatilität)
+│   └── geldmanagement.py        # Positionsgröße, Stop-Platzierung
+├── data/
+│   ├── prices/                  # OHLCV CSVs je Ticker
+│   └── news/                    # News CSVs je Ticker & Datum
+├── tests/
+├── requirements.txt
+└── .env                         # API-Keys (nicht im Repo)
 ```
 
 ---
 
 ## Datenquellen
 
-| Quelle | Typ | Notizen |
-|--------|-----|---------|
-| Yahoo Finance (yfinance) | Python-Bibliothek | Kostenlos; geeignet für Prototyp |
-| Alpha Vantage | REST API | Kostenlose Tier; Ratenlimit beachten |
-| Polygon.io | REST API | Umfangreicher; kostenpflichtig |
+| Quelle | Typ | Verwendung |
+|--------|-----|------------|
+| Yahoo Finance (yfinance) | Python-Bibliothek | OHLCV Tagesdaten, kostenlos |
+| Alpha Vantage | REST API | News + Sentiment, kostenloser Tier |
 
 **Benötigt:** Open, High, Low, Close, Volume – mind. 2 Jahre Historie
 
@@ -93,20 +147,43 @@ CRV:       3.5:1
 
 ---
 
+## ML-Modul: Zwei Ansätze (geplant)
+
+Das ML-Modul (`src/ml/`) kombiniert zwei komplementäre Methoden:
+
+### 1. XGBoost — Signalgenerierung aus Features
+- Technische Indikatoren als Input-Features (RSI, MACD, ADX, Bollinger, Volumen...)
+- Vorhersage: BUY / SELL / NEUTRAL
+- Trainiert auf historischen Daten mit Walk-Forward-Validierung
+
+### 2. DTW Generic Pattern Recognition — Mustererkennung
+> Quelle: Tsinaslanidis & Guijarro (2021) — getestet auf 560 NYSE-Aktien, Tagesdaten 2006–2015
+
+**Grundprinzip:** Statt nur vordefinierte Chartmuster (Kopf-Schulter, Flaggen etc.) zu suchen, findet DTW **beliebige historische Preismuster**, die in der Vergangenheit profitabel waren — ohne vorher zu wissen wie das Muster aussieht.
+
+**Wissenschaftlich belegte Parameterrichtlinien:**
+
+| Parameter | Empfohlener Bereich | Begründung |
+|-----------|--------------------|----|
+| Musterlänge | **15–25 Handelstage** | Längere Muster = höhere Signifikanz (Pring 2002) |
+| Anzahl Referenzmuster | **10–15** | Weniger = selektiver = besser |
+| Take-Profit | **10–16%** | Stärkste positive Korrelation mit Performance (0.701) |
+| Stop-Loss | **< Take-Profit** | SL nicht signifikant — TP/SL-Verhältnis entscheidend |
+| Konsens-Schwelle | **Hoch** | Nur handeln wenn Mehrheit der Referenzen übereinstimmt |
+
+**Verhältnis zu klassischen Mustern:**
+
+| Ansatz | Modul | Beschreibung |
+|--------|-------|-------------|
+| Klassische Chartmuster | `src/ta/muster/` | Regelbasiert, vordefinierte Formen |
+| DTW Generic Patterns | `src/ml/` | Datengetrieben, findet unbekannte Muster |
+
+Beide Ansätze ergänzen sich: Klassische Muster liefern interpretierbare Signale, DTW erkennt Muster die der Mensch nicht sieht.
+
+---
+
 ## Backtest-Framework (geplant)
 
 - Walk-Forward Testing (In-Sample / Out-of-Sample)
 - Gleiche Parameter für alle Märkte (gegen Over-Fitting)
 - Bewertungsmetriken: Sharpe Ratio, Max Drawdown, Win Rate, Ø CRV
-
----
-
-## Technologie-Stack (Vorschlag)
-
-| Komponente | Technologie |
-|------------|-------------|
-| Datenabruf | Python + yfinance / requests |
-| Indikator-Berechnung | pandas-ta / ta-lib |
-| Muster-Erkennung | Eigene Funktionen |
-| Output | CSV / JSON / Dashboard |
-| Visualisierung | matplotlib / plotly |
