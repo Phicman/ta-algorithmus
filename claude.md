@@ -2,7 +2,7 @@
 
 > Zentrale Dokumentation zum Aufbau eines modularen, signalbasierten Handelsalgorithmus.
 > Projektphase: Konzeption + Data-Modul + alle TA-Indikatoren implementiert
-> Letzte Aktualisierung: 2026-02-22
+> Letzte Aktualisierung: 2026-02-23
 
 ---
 
@@ -52,10 +52,10 @@ Aktiendaten
 |-------|-------|--------|
 | Strategie & Ziel | [01_strategie.md](./01_strategie.md) | 🔲 Konzept |
 | Technische Analyse | [02_technische_analyse/README.md](./02_technische_analyse/README.md) | 🔲 Konzept |
-| ML-Analyse | [03_ml_analyse/README.md](./03_ml_analyse/README.md) | 🔲 Konzept |
+| ML-Analyse | [03_ml_analyse/README.md](./03_ml_analyse/README.md) | 🔄 Dokumentation läuft |
 | Sentiment-Analyse | [04_sentiment_analyse/README.md](./04_sentiment_analyse/README.md) | 🔲 Konzept |
 | Market Regime | [05_market_regime/README.md](./05_market_regime/README.md) | 🔲 Konzept |
-| Geldmanagement | [06_geldmanagement.md](./06_geldmanagement.md) | 🔲 Konzept |
+| Geldmanagement | [06_geldmanagement.md](./06_geldmanagement.md) | 🔄 Dokumentation läuft |
 | Architektur | [07_architektur.md](./07_architektur.md) | ✅ Dokumentiert |
 | TODO / Backlog | [08_todo.md](./08_todo.md) | ✅ Aktiv |
 
@@ -67,16 +67,27 @@ Aktiendaten
 |-------|-------------|--------|
 | `src/data/price_fetcher.py` | yfinance → OHLCV CSV, Multi-Ticker, Caching | ✅ Fertig |
 | `src/data/news_fetcher.py` | Alpha Vantage News API (benötigt `.env` mit API-Key) | ✅ Fertig |
+| `src/data/feature_store.py` | Parquet-Cache für Indikatoren; FEATURE_PIPELINE orchestriert alle Module | ✅ Fertig |
 | `src/ta/indikatoren/adx.py` | ADX/DMI (Regime-Filter) + Parabolic SAR | ✅ Fertig |
 | `src/ta/indikatoren/durchschnitte.py` | EMA 9/21/50/200, Bollinger Bänder, Donchian-Kanal | ✅ Fertig |
 | `src/ta/indikatoren/oszillatoren.py` | RSI (Wilder), MACD, Slow Stochastik | ✅ Fertig |
 | `src/ta/indikatoren/volumen.py` | OBV + OBV-Trend, Volumen-Kontext, Kurs/Volumen-Signal | ✅ Fertig |
+| `src/ta/TA_run.py` | TA-Scoring, Haupt-Runner; akzeptiert pre-computed df vom Feature Store | ✅ Fertig |
+| `main.py` | Einstiegspunkt — analysiert alle Ticker aus `tickers.txt` | ✅ Fertig |
 | `tickers.txt` | AAPL, MSFT, NVDA, JPM, BAC | ✅ Fertig |
-| `requirements.txt` | yfinance, pandas, requests, python-dotenv | ✅ Fertig |
+| `requirements.txt` | yfinance, pandas, requests, python-dotenv, pyarrow | ✅ Fertig |
+| `03_ml_analyse/03a_modelle/dtw_generic_pattern.md` | DTW Generic Pattern Recognition — Algorithmus, UCR Suite, Parameter, Ergebnisse | ✅ Fertig |
+| `03_ml_analyse/03a_modelle/ffnn_volume_profile.md` | FFNN + Volume-Profile — b/p-Shape, Features, Walk-Forward-CV, Ergebnisse | ✅ Fertig |
+| `03_ml_analyse/03a_modelle/prml_candlestick_rf.md` | PRML Candlestick + Random Forest — 13 Shapes, 9 Indikatoren, Pattern-Screening, Ergebnisse | ✅ Fertig |
+| `03_ml_analyse/03b_features/volume_profile.md` | Volume-Profile Feature-Definition (b/p-shape, delta, new_min/max, candlestick_tick) | ✅ Fertig |
+| `03_ml_analyse/03b_features/candlestick_shape_loc.md` | Candlestick Shape (13 Formen) + Loc (8 relative Positionen) — formal + Python-Implementierung | ✅ Fertig |
+| `03_ml_analyse/03d_backtesting.md` | Evaluierungsmetriken (WWR, PPC, MDD, Sharpe, IR, AAR, F-Measure, Profit/MDD), Walk-Forward, Walk-Forward-Parametrierung, Sliding Window, Hansen SPA | ✅ Fertig |
 
 **Schlüssel-Entscheidungen:**
 - Datenspeicherung: CSV je Ticker (`{TICKER}_daily.csv`) + kombinierte `all_daily.csv`
-- Indikatoren werden **nicht in CSV gespeichert** — immer frisch im Speicher berechnet
+- Indikatoren als **Parquet gecacht** (`data/features/{TICKER}_features.parquet`) — `feature_store.py` als Zwischenschicht zwischen OHLCV und allen Analyse-Modulen
+- **FEATURE_PIPELINE** in `feature_store.py` — geordnete Liste von Berechnungsfunktionen; jedes neue Modul registriert seine eigene Feature-Funktion dort (kein Modul muss ein anderes kennen)
+- `TA_run.run()` überspringt `add_all_indicators()` wenn der df bereits Indikatoren enthält (`rsi`-Spalte als Prüfung) — rückwärtskompatibel
 - Ticker-Verwaltung: `tickers.txt` (Kommentare mit `#`, Leerzeilen werden ignoriert)
 - Unternehmensname: Spalte `Name` zwischen Ticker und Open (via `yfinance.info`)
 - Daily OHLCV ab `2019-01-01` als Standard-Startdatum
@@ -126,4 +137,7 @@ Wie die einzelnen Modul-Scores zu einem Gesamt-Score zusammengeführt werden (z.
 | 1 | John J. Murphy – *Technische Analyse der Finanzmärkte* | Buch | Technische Analyse |
 | 2 | Park & Irwin (2004) | Paper | Price Channel / Fortsetzungsformationen |
 | 3 | Pramudya & Ichsani (2020) | Paper | Signal-Logik (MACD als Bestätigung, RSI+BB-Kombination) |
-| 4 | Tsinaslanidis & Guijarro (2021) | Paper | ML-Modul: DTW Generic Pattern Recognition |
+| 4 | Tsinaslanidis & Guijarro (2021) | Paper | ML-Modul: DTW Generic Pattern Recognition — 560 NYSE-Aktien, 91 % profitable Konfigurationen |
+| 5 | Serafini (2019) | Master-Thesis | ML-Modul: FFNN + Volume-Profile — WWR 80,4 %, CRV 3:1 bestätigt |
+| 6 | Lin, Liu, Yang et al. (2021) | Paper | ML-Modul: PRML Candlestick + Random Forest — 13 Shapes, 36,7 % p.a. TOP10 |
+| 7 | Arévalo, García, Guijarro & Peris (2017) | Paper | TA-Modul/Backtesting: Flag-Pattern + EMA-Dual-Timeframe-Filter + Dynamic Walk-Forward SL/TP — DJIA 286 % Return, Profit/MDD 13,2, Reality Check bestanden |

@@ -97,6 +97,41 @@
 
 ---
 
+## Pattern-Range als SL/TP-Anker *(Arévalo, García, Guijarro & Peris 2017)*
+
+> Statt fixer Beträge oder Prozentsätze: Stop Loss und Take Profit als Vielfaches der **Formations-Range R** definieren — konkretisiert die abstrakte 3:1-CRV-Regel.
+
+**Definition R:**
+```
+R = Höchster Schlusskurs der Formation − Tiefster Eröffnungskurs der Formation
+```
+
+**Parametrisierung:**
+
+| Parameter | Mögliche Werte |
+|-----------|----------------|
+| **Stop Loss** | `SL ∈ {0.2×R, 0.3×R, 0.4×R, 0.5×R}` |
+| **Take Profit** | `TP ∈ {2.0×SL, 2.25×SL, 2.5×SL, 2.75×SL, 3.0×SL}` |
+
+→ Implizites CRV: `min(TP/SL) = 2:1`, `max(TP/SL) = 3:1` — entspricht der bestehenden 3:1-Mindestregel.
+
+**Dynamische Kalibrierung (Walk-Forward):**
+- Jedes Quartal: Beste SL/TP-Kombination aus dem **Vorquartal** bestimmen
+- Diese Konfiguration im **nächsten Quartal** anwenden
+- Macht Parameter marktadaptiv statt statisch — kein manuelles Parameter-Raten nötig
+
+**Maximales Verlustlimit pro Trade:**
+- Zusätzlich zum prozentualen SL: absolutes Verlustlimit pro Trade als Sicherheitsnetz
+- Schutz gegen Patterns mit sehr großer Range → entsprechend großes SL
+- Verhindert einzelne fatal losses auch wenn Stop formationskonform platziert ist
+
+**Anwendbarkeit im Projekt:**
+- Für alle pattern-basierten Signale: Flags, Dreiecke, Price Channel
+- SL/TP-Parameter als optimierbare Werte im Walk-Forward-Backtesting (→ `03d_backtesting.md`)
+- Range R ist direkt aus OHLCV berechenbar — kein zusätzlicher Daten-Input nötig
+
+---
+
 ## Die 20 Handelsregeln (Murphy)
 
 1. Trade mit dem mittelfristigen Trend

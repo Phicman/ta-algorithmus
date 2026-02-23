@@ -63,6 +63,45 @@ Spiegelverkehrt zum aufsteigenden Dreieck.
 | Erscheinen | Ungefähr auf halbem Weg einer Marktbewegung |
 | Zuverlässigkeit | Gehören zu den zuverlässigsten Fortsetzungsformationen |
 
+### Formale Flag-Erkennung: Matrix-Methode *(Arévalo, García, Guijarro & Peris 2017)*
+
+**Grundprinzip:** Die Flag-Formation wird über eine 10×10-Gewichtsmatrix objektiv erkannt. Das Maß der Übereinstimmung heißt *Fit Value (FV)*.
+
+**Matrixstruktur (Bull-Flag):**
+- Spalte 1 = Fahnenstange (starker Ausbruch): positiver Anker (+5)
+- Spalten 2–10 = Konsolidierungszone: obere Reihen = 0 (Preis darf dort verweilen), untere Reihen negativ (−1 bis −5, Preis soll dort nicht liegen)
+- **Bear-Flag** = Bull-Matrix × Anti-Identitätsmatrix (mathematisch gespiegelt)
+
+**Fit Value (FV):**
+
+| FV | Bedeutung |
+|----|-----------|
+| +5 | Perfekte Flag — maximal präzise Übereinstimmung |
+| +4 bis +2 | Klare Flag, abnehmende Präzision |
+| +1 bis 0 | Schwache Flag |
+| −1 bis −5 | Sehr lockere Kriterien — mehr Signale, niedrigere Präzision |
+
+→ FV ist ein **numerisches Konfidenzmaß** und direkt in die Score-Aggregation des Algorithmus übertragbar.
+
+**Pflichtfilter für gültige Flags:**
+
+| Filter | Beschreibung |
+|--------|-------------|
+| **Range-Filter** | Nur Flags mit Mindest-Preisrange (R) berücksichtigen — schließt bedeutungslose Kleinstkonsolidierungen aus |
+| **EMA-Dual-Timeframe-Filter** | Bull-Flag nur gültig wenn `Schlusskurs > EMA(kurzfristig)` UND `Schlusskurs > EMA(mittelfristig)` — bestätigt Trend auf beiden Zeitebenen gleichzeitig |
+
+**Empirische Evidenz (DJIA, 15-min, 2000–2013):**
+
+| Strategie | Return | Max. Drawdown | Profit/MDD |
+|-----------|--------|--------------|------------|
+| Flag + EMA + Dynamic SL/TP (dieses Paper) | 286 % | 2.272 Pkt. | 13,2 |
+| Flag alleine (CGM-Vorgänger) | 180 % | 4.244 Pkt. | — |
+| Buy & Hold (DJIA) | ~48 % | 7.716 Pkt. | — |
+
+- Reality Check (White 2000 / Hansen SPA 2005) bestanden: p-Wert = 0 → kein Data-Snooping-Artefakt
+- **Kombination Flag + EMA übertrifft Flag alleine UND EMA alleine** → Kombinationseffekt empirisch bestätigt (konsistent mit Prinzip 1 aus `02d_signal_logik.md`)
+- Buy-Seite und Sell-Seite beide profitabel; Buy robuster (konsistent mit Wong 2002)
+
 ---
 
 ## Keil-Formation

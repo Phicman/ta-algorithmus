@@ -44,7 +44,7 @@
 | Sprache            | Python                             |
 | Datenabruf Kurse   | yfinance                           |
 | Datenabruf News    | Alpha Vantage REST API             |
-| Datenspeicherung   | CSV (später ggf. SQLite)           |
+| Datenspeicherung   | CSV (OHLCV) + Parquet (Features/Indikatoren, via pyarrow) |
 | Indikator-Berechnung | pandas, pandas-ta / ta-lib       |
 | Muster-Erkennung   | Eigene Python-Funktionen           |
 | ML-Signalgenerierung | XGBoost                          |
@@ -59,21 +59,24 @@
 
 ```
 ta-algorithmus/
+├── main.py                      # Einstiegspunkt — analysiert alle Ticker
 ├── src/
 │   ├── data/
 │   │   ├── price_fetcher.py     # yfinance → OHLCV CSV
-│   │   └── news_fetcher.py      # Alpha Vantage → News CSV
+│   │   ├── news_fetcher.py      # Alpha Vantage → News CSV
+│   │   └── feature_store.py     # Parquet-Cache; FEATURE_PIPELINE orchestriert alle Module
 │   ├── ta/
-│   │   ├── indikatoren/         # SMA, EMA, RSI, MACD, Bollinger, OBV, ADX...
+│   │   ├── indikatoren/         # EMA, RSI, MACD, Bollinger, OBV, ADX...
 │   │   ├── muster/              # Candlesticks, Formationen, Umkehr/Fortsetzung
-│   │   └── signal_logik.py      # Filterung, CRV-Berechnung, Signal-Output
+│   │   └── TA_run.py            # TA-Scoring & Signal-Output
 │   ├── ml/                      # XGBoost + DTW Generic Pattern Recognition
 │   ├── sentiment/               # FinBERT Pipeline & Scoring
 │   ├── market_regime/           # Regime-Erkennung (Trend/Range/Volatilität)
 │   └── geldmanagement.py        # Positionsgröße, Stop-Platzierung
 ├── data/
-│   ├── prices/                  # OHLCV CSVs je Ticker
-│   └── news/                    # News CSVs je Ticker & Datum
+│   ├── prices/                  # OHLCV CSVs je Ticker (gitignored)
+│   ├── features/                # Parquet-Cache mit Indikatoren je Ticker (gitignored)
+│   └── news/                    # News CSVs je Ticker & Datum (gitignored)
 ├── tests/
 ├── requirements.txt
 └── .env                         # API-Keys (nicht im Repo)
